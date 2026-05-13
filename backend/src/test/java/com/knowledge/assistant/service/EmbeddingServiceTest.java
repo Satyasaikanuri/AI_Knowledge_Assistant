@@ -34,7 +34,7 @@ class EmbeddingServiceTest {
         // Since the constructor initializes Pinecone which requires API keys,
         // we might need a modified version for unit tests or use reflection to inject mocks.
         // For this task, we will mock the critical parts.
-        embeddingService = new EmbeddingService(metadataRepository, fileRepository, "test-key", "env", "project", "index");
+        embeddingService = new EmbeddingService(metadataRepository, fileRepository, "test-key", "index");
     }
 
     @Test

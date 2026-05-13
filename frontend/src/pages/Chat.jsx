@@ -129,13 +129,35 @@ const Chat = () => {
       handleSend();
     }
   };
+  const handleSummarize = async () => {
+    if (!selectedFile || isLoading) return;
+    
+    setIsLoading(true);
+    try {
+      const response = await api.get(`/summary/${selectedFile}`);
+      const summaryMsg = {
+        id: Date.now(),
+        role: 'ai',
+        text: `### Neural Summary of ${selectedFileObj.name}\n\n${response.data}`,
+        isSummary: true
+      };
+      setMessages(prev => [...prev, summaryMsg]);
+      toast.success('Neural Ingestion Complete: Summary Generated');
+    } catch (error) {
+      toast.error('Failed to generate summary');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const [isVideoMinimized, setIsVideoMinimized] = useState(false);
 
   return (
     <div className="flex flex-col h-[calc(100vh-8rem)] max-w-6xl mx-auto glass-panel rounded-[2.5rem] overflow-hidden relative border-white/5">
       <NeuralBackground />
       
       {/* Terminal Header */}
-      <div className="px-8 py-5 border-b border-white/5 bg-slate-950/20 backdrop-blur-md flex flex-col sm:flex-row items-center justify-between gap-4 z-20">
+      <div className="px-4 sm:px-8 py-5 border-b border-white/5 bg-slate-950/20 backdrop-blur-md flex flex-col sm:flex-row items-center justify-between gap-4 z-20">
         <div className="flex items-center gap-4">
           <div className="relative">
              <div className="absolute inset-0 bg-cyan-500 blur-md opacity-20 animate-pulse" />
@@ -149,21 +171,34 @@ const Chat = () => {
           </div>
         </div>
 
-        <div className="relative group w-full sm:w-auto">
-          <select 
-            value={selectedFile}
-            onChange={(e) => setSelectedFile(e.target.value)}
-            className="w-full sm:w-72 appearance-none pl-12 pr-10 py-3 bg-white/5 border border-white/10 rounded-2xl text-[11px] text-slate-300 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 transition-all cursor-pointer hover:bg-white/10 font-black uppercase tracking-widest"
-          >
-            <option value="" disabled>Select Knowledge Unit</option>
-            {files.map(f => (
-              <option key={f.id} value={f.id} className="bg-slate-900">{f.name}</option>
-            ))}
-          </select>
-          <div className="absolute left-4 top-1/2 -translate-y-1/2 p-1.5 bg-white/5 rounded-lg text-cyan-400">
-            <Paperclip size={16} />
+        <div className="flex items-center gap-3 w-full sm:w-auto">
+          <div className="relative group flex-1 sm:flex-none">
+            <select 
+              value={selectedFile}
+              onChange={(e) => setSelectedFile(e.target.value)}
+              className="w-full sm:w-64 appearance-none pl-12 pr-10 py-3 bg-white/5 border border-white/10 rounded-2xl text-[11px] text-slate-300 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 transition-all cursor-pointer hover:bg-white/10 font-black uppercase tracking-widest"
+            >
+              <option value="" disabled>Select Knowledge Unit</option>
+              {files.map(f => (
+                <option key={f.id} value={f.id} className="bg-slate-900">{f.name}</option>
+              ))}
+            </select>
+            <div className="absolute left-4 top-1/2 -translate-y-1/2 p-1.5 bg-white/5 rounded-lg text-cyan-400">
+              <Paperclip size={16} />
+            </div>
+            <ChevronDown size={16} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none group-hover:text-cyan-400 transition-colors" />
           </div>
-          <ChevronDown size={16} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none group-hover:text-cyan-400 transition-colors" />
+
+          {selectedFile && (
+            <button
+              onClick={handleSummarize}
+              disabled={isLoading}
+              className="p-3 bg-gradient-to-br from-purple-500 to-pink-600 rounded-2xl text-white shadow-lg hover:scale-105 active:scale-95 transition-all disabled:opacity-50 flex items-center gap-2 text-[10px] font-black uppercase tracking-widest"
+            >
+              <Zap size={16} className="fill-current" />
+              Summarize
+            </button>
+          )}
         </div>
       </div>
 
@@ -171,26 +206,43 @@ const Chat = () => {
       <AnimatePresence>
         {isMedia && (
           <motion.div 
-            initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }}
-            className="px-8 py-6 bg-slate-950/40 border-b border-white/5 relative z-10"
+            initial={{ height: 0, opacity: 0 }} 
+            animate={{ height: isVideoMinimized ? '60px' : 'auto', opacity: 1 }} 
+            exit={{ height: 0, opacity: 0 }}
+            className="px-8 py-4 bg-slate-950/60 border-b border-white/5 sticky top-0 z-30 backdrop-blur-xl overflow-hidden"
           >
-            <div className="max-w-3xl mx-auto rounded-3xl overflow-hidden shadow-2xl border border-white/10 relative bg-black group">
-              <video 
-                ref={mediaRef} controls className="w-full max-h-[35vh]"
-                src={`http://localhost:8081/api/v1/files/stream/${selectedFile}?token=${token}`}
-              />
-              <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity">
-                 <button onClick={() => setNowPlaying(null)} className="p-2 bg-black/50 text-white rounded-full hover:bg-red-500 transition-colors">
-                    <X size={16} />
-                 </button>
+            <div className="max-w-4xl mx-auto flex flex-col gap-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                   <div className="w-2 h-2 rounded-full bg-cyan-500 animate-pulse" />
+                   <span className="text-[10px] font-black text-cyan-400 uppercase tracking-widest">Neural Stream Active: {selectedFileObj.name}</span>
+                </div>
+                <button 
+                  onClick={() => setIsVideoMinimized(!isVideoMinimized)}
+                  className="px-3 py-1 bg-white/5 hover:bg-white/10 rounded-lg text-[10px] font-black text-slate-400 uppercase tracking-tighter transition-all flex items-center gap-2"
+                >
+                  {isVideoMinimized ? <><Play size={10} /> Expand Player</> : <><ChevronDown size={10} /> Minimize</>}
+                </button>
               </div>
+
+              {!isVideoMinimized && (
+                <motion.div 
+                  initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}
+                  className="rounded-3xl overflow-hidden shadow-2xl border border-white/10 relative bg-black group aspect-video max-h-[28vh] mx-auto"
+                >
+                  <video 
+                    ref={mediaRef} controls className="w-full h-full object-contain"
+                    src={`http://localhost:8080/api/v1/files/stream/${selectedFile}?token=${token}`}
+                  />
+                </motion.div>
+              )}
             </div>
           </motion.div>
         )}
       </AnimatePresence>
 
       {/* Chat Thread */}
-      <div className="flex-1 overflow-y-auto px-8 py-10 space-y-12 custom-scrollbar relative z-10">
+      <div className="flex-1 overflow-y-auto px-4 sm:px-8 py-10 space-y-12 custom-scrollbar relative z-10">
         {messages.map((msg, index) => (
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} key={msg.id} 
             className={clsx("flex gap-6 max-w-4xl mx-auto", msg.role === 'user' ? "flex-row-reverse" : "")}
@@ -214,7 +266,26 @@ const Chat = () => {
                 "px-7 py-5 rounded-[2.5rem] shadow-2xl text-[15px] leading-relaxed relative",
                 msg.role === 'user' ? "bg-cyan-600 text-white rounded-tr-none border border-cyan-400/20" : "glass-card text-white rounded-tl-none border-white/5"
               )}>
-                <ReactMarkdown className="prose prose-invert max-w-none prose-sm font-medium">{msg.text}</ReactMarkdown>
+                {/* Process text to find [start - end] patterns and make them interactive */}
+                <div className="prose prose-invert max-w-none prose-sm font-medium">
+                  {msg.text.split(/(\[[\d.]+\s*-\s*[\d.]+\])/g).map((part, i) => {
+                    const timestampMatch = part.match(/\[([\d.]+)\s*-\s*([\d.]+)\]/);
+                    if (timestampMatch) {
+                      const start = parseFloat(timestampMatch[1]);
+                      return (
+                        <button
+                          key={i}
+                          onClick={() => handleTimestampClick(start, `Jump to ${timestampMatch[0]}`)}
+                          className="inline-flex items-center gap-1.5 mx-1 px-3 py-1 bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 rounded-xl font-black text-[12px] hover:bg-cyan-500/30 transition-all group/ts"
+                        >
+                          <Play size={10} className="fill-current group-hover/ts:scale-125 transition-transform" />
+                          {timestampMatch[0]}
+                        </button>
+                      );
+                    }
+                    return <ReactMarkdown key={i} components={{ p: 'span' }}>{part}</ReactMarkdown>;
+                  })}
+                </div>
                 
                 {msg.timestamps && msg.timestamps.length > 0 && (
                   <div className="mt-8 pt-6 border-t border-white/5">

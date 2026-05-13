@@ -9,19 +9,27 @@ import com.knowledge.assistant.entity.RefreshToken;
 import com.knowledge.assistant.security.JwtService;
 import com.knowledge.assistant.service.AuthenticationService;
 import com.knowledge.assistant.service.RefreshTokenService;
-import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/v1/auth")
-@RequiredArgsConstructor
 public class AuthenticationController {
 
     private final AuthenticationService service;
     private final RefreshTokenService refreshTokenService;
     private final JwtService jwtService;
+
+    public AuthenticationController(
+            AuthenticationService service,
+            RefreshTokenService refreshTokenService,
+            JwtService jwtService
+    ) {
+        this.service = service;
+        this.refreshTokenService = refreshTokenService;
+        this.jwtService = jwtService;
+    }
 
     @PostMapping("/register")
     public ResponseEntity<AuthenticationResponse> register(

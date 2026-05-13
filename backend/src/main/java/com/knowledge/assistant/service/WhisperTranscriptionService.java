@@ -8,8 +8,6 @@ import com.knowledge.assistant.repository.TimestampReferenceRepository;
 import com.knowledge.assistant.repository.UploadedFileRepository;
 import dev.langchain4j.data.document.Document;
 import dev.langchain4j.data.document.Metadata;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.http.HttpEntity;
@@ -26,8 +24,6 @@ import java.io.File;
 import java.util.Iterator;
 
 @Service
-@RequiredArgsConstructor
-@Slf4j
 public class WhisperTranscriptionService {
 
     @Value("${openai.api-key}")
@@ -39,9 +35,19 @@ public class WhisperTranscriptionService {
     private final RestTemplate restTemplate = new RestTemplate();
     private final ObjectMapper objectMapper = new ObjectMapper();
 
+    public WhisperTranscriptionService(
+            UploadedFileRepository fileRepository,
+            TimestampReferenceRepository timestampRepository,
+            EmbeddingService embeddingService
+    ) {
+        this.fileRepository = fileRepository;
+        this.timestampRepository = timestampRepository;
+        this.embeddingService = embeddingService;
+    }
+
     @Async
     public void processAudioVideoAsync(Long fileId) {
-        log.info("Starting Whisper transcription for file ID: {}", fileId);
+        System.out.println("Starting Whisper transcription for file ID: " + fileId);
         try {
             UploadedFile uploadedFile = fileRepository.findById(fileId)
                     .orElseThrow(() -> new RuntimeException("File not found: " + fileId));
@@ -64,7 +70,7 @@ public class WhisperTranscriptionService {
 
             String url = "https://api.openai.com/v1/audio/transcriptions";
             
-            log.info("Sending request to OpenAI Whisper API...");
+            System.out.println("Sending request to OpenAI Whisper API...");
             ResponseEntity<String> response = restTemplate.postForEntity(url, requestEntity, String.class);
 
             if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
@@ -74,7 +80,7 @@ public class WhisperTranscriptionService {
                 uploadedFile.setExtractedText(fullText);
                 fileRepository.save(uploadedFile);
 
-                log.info("Successfully transcribed media. Extracting timestamps...");
+                System.out.println("Successfully transcribed media. Extracting timestamps...");
                 
                 JsonNode segmentsNode = rootNode.path("segments");
                 StringBuilder documentContent = new StringBuilder();
@@ -87,13 +93,12 @@ public class WhisperTranscriptionService {
                         double end = segment.path("end").asDouble();
                         String text = segment.path("text").asText();
 
-                        TimestampReference ref = TimestampReference.builder()
-                                .startTime(start)
-                                .endTime(end)
-                                .transcriptText(text)
-                                .uploadedFile(uploadedFile)
-                                .topic(generateTopicForSegment(text)) // Basic topic generation
-                                .build();
+                        TimestampReference ref = new TimestampReference();
+                        ref.setStartTime(start);
+                        ref.setEndTime(end);
+                        ref.setTranscriptText(text);
+                        ref.setUploadedFile(uploadedFile);
+                        ref.setTopic(generateTopicForSegment(text));
                         
                         timestampRepository.save(ref);
                         
@@ -106,13 +111,14 @@ public class WhisperTranscriptionService {
                 Document document = Document.from(documentContent.toString(), new Metadata());
                 embeddingService.chunkAndEmbedDocument(document, uploadedFile);
 
-                log.info("Finished processing audio/video for file ID: {}", fileId);
+                System.out.println("Finished processing audio/video for file ID: " + fileId);
             } else {
-                log.error("Whisper API call failed with status: {}", response.getStatusCode());
+                System.out.println("ERROR: Whisper API call failed with status: " + response.getStatusCode());
             }
 
         } catch (Exception e) {
-            log.error("Error during Whisper transcription for file ID: {}", fileId, e);
+            System.out.println("Error during Whisper transcription for file ID: " + fileId + ". Error: " + e.getMessage());
+            e.printStackTrace();
         }
     }
     

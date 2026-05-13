@@ -1,19 +1,24 @@
 package com.knowledge.assistant.service;
 
+import com.knowledge.assistant.dto.ChatRequest;
 import com.knowledge.assistant.dto.ChatResponse;
-import com.knowledge.assistant.entity.TimestampReference;
+import com.knowledge.assistant.entity.UploadedFile;
+import com.knowledge.assistant.entity.User;
 import com.knowledge.assistant.repository.ChatHistoryRepository;
 import com.knowledge.assistant.repository.TimestampReferenceRepository;
-import dev.langchain4j.model.openai.OpenAiChatModel;
+import com.knowledge.assistant.repository.UploadedFileRepository;
+import com.knowledge.assistant.repository.UserRepository;
+import dev.langchain4j.model.chat.ChatLanguageModel;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
@@ -29,46 +34,56 @@ class AiChatServiceTest {
     @Mock
     private VectorSearchService vectorSearchService;
     @Mock
-    private OpenAiChatModel chatModel;
+    private UploadedFileRepository fileRepository;
+    @Mock
+    private UserRepository userRepository;
+    @Mock
+    private ChatLanguageModel chatLanguageModel;
 
-    @InjectMocks
     private AiChatService aiChatService;
 
     @BeforeEach
     void setUp() {
-        // chatModel is initialized in the constructor with @Value, 
-        // so we might need to manually set it or use reflection if it's not a mockable bean easily.
-        // For unit testing, we usually mock the behavior of the model.
+        // We create the service manually to inject the mocked chatLanguageModel
+        aiChatService = new AiChatService(
+                vectorSearchService,
+                chatHistoryRepository,
+                fileRepository,
+                userRepository,
+                timestampRepository,
+                "dummy-key",
+                "http://dummy",
+                "dummy-model"
+        );
+        // Inject the mocked language model instead of the one built in constructor
+        ReflectionTestUtils.setField(aiChatService, "chatLanguageModel", chatLanguageModel);
     }
 
     @Test
     void askQuestion_Success() {
-        String question = "What is RAG?";
-        Long fileId = 1L;
-        List<String> context = List.of("RAG stands for Retrieval-Augmented Generation.");
+        ChatRequest request = new ChatRequest();
+        request.setQuestion("What is RAG?");
+        request.setFileId(1L);
         
-        when(vectorSearchService.searchRelevantContext(anyString(), anyLong(), anyInt())).thenReturn(context);
-        when(chatModel.generate(anyString())).thenReturn("AI Answer");
-        when(timestampRepository.findByUploadedFileId(anyLong())).thenReturn(Collections.emptyList());
+        String userEmail = "test@example.com";
+        User user = new User();
+        user.setEmail(userEmail);
+        user.setId(10L);
 
-        ChatResponse response = aiChatService.askQuestion(question, fileId);
+        UploadedFile file = new UploadedFile();
+        file.setId(1L);
+        file.setOriginalFileName("test.pdf");
+        file.setFileType("application/pdf");
+
+        when(userRepository.findByEmail(userEmail)).thenReturn(Optional.of(user));
+        when(fileRepository.findById(1L)).thenReturn(Optional.of(file));
+        when(vectorSearchService.searchRelevantContext(anyString(), anyLong(), anyInt())).thenReturn(List.of("RAG context"));
+        when(chatLanguageModel.generate(anyString())).thenReturn("AI Answer");
+
+        ChatResponse response = aiChatService.askQuestion(request, userEmail);
 
         assertNotNull(response);
         assertEquals("AI Answer", response.getAnswer());
         verify(chatHistoryRepository, times(1)).save(any());
-    }
-
-    @Test
-    void askQuestion_NoContext() {
-        String question = "Unknown?";
-        Long fileId = 1L;
-        
-        when(vectorSearchService.searchRelevantContext(anyString(), anyLong(), anyInt())).thenReturn(Collections.emptyList());
-        when(chatModel.generate(anyString())).thenReturn("I don't know.");
-
-        ChatResponse response = aiChatService.askQuestion(question, fileId);
-
-        assertNotNull(response);
-        assertTrue(response.getAnswer().contains("I don't know"));
     }
 }

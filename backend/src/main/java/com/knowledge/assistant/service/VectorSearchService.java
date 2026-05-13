@@ -7,22 +7,22 @@ import dev.langchain4j.store.embedding.EmbeddingSearchRequest;
 import dev.langchain4j.store.embedding.EmbeddingStore;
 import dev.langchain4j.store.embedding.filter.Filter;
 import dev.langchain4j.store.embedding.filter.comparison.IsEqualTo;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
-@RequiredArgsConstructor
-@Slf4j
 public class VectorSearchService {
 
     private final EmbeddingService embeddingService;
 
+    public VectorSearchService(EmbeddingService embeddingService) {
+        this.embeddingService = embeddingService;
+    }
+
     public List<String> searchRelevantContext(String question, Long fileId, int maxResults) {
-        log.info("Searching vector DB for question: '{}' in fileId: {}", question, fileId);
+        System.out.println("Searching vector DB for question: '" + question + "' in fileId: " + fileId);
 
         EmbeddingModel embeddingModel = embeddingService.getEmbeddingModel();
         EmbeddingStore<TextSegment> embeddingStore = embeddingService.getEmbeddingStore();
@@ -43,9 +43,9 @@ public class VectorSearchService {
 
         if (!matches.isEmpty()) {
             double topScore = matches.get(0).score();
-            log.info("Top similarity score: {}", topScore);
+            System.out.println("Top similarity score: " + topScore);
         } else {
-            log.info("No matching chunks found.");
+            System.out.println("No matching chunks found.");
         }
 
         List<String> results = matches.stream()
@@ -60,7 +60,7 @@ public class VectorSearchService {
                 .distinct()
                 .collect(Collectors.toList());
 
-        log.info("Retrieved chunks: {}", results.size());
+        System.out.println("Retrieved chunks: " + results.size());
 
         return results;
     }

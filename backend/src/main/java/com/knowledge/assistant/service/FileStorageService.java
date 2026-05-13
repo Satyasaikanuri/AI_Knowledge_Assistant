@@ -5,8 +5,6 @@ import com.knowledge.assistant.entity.UploadedFile;
 import com.knowledge.assistant.entity.User;
 import com.knowledge.assistant.repository.UploadedFileRepository;
 import com.knowledge.assistant.repository.UserRepository;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -23,8 +21,6 @@ import java.util.UUID;
 import java.io.InputStream;
 
 @Service
-@RequiredArgsConstructor
-@Slf4j
 public class FileStorageService {
 
     @Value("${app.storage.upload-dir:uploads}")
@@ -32,6 +28,11 @@ public class FileStorageService {
 
     private final UploadedFileRepository fileRepository;
     private final UserRepository userRepository;
+
+    public FileStorageService(UploadedFileRepository fileRepository, UserRepository userRepository) {
+        this.fileRepository = fileRepository;
+        this.userRepository = userRepository;
+    }
 
     private static final List<String> ALLOWED_EXTENSIONS = Arrays.asList(
             "application/pdf", "audio/mpeg", "audio/wav", "video/mp4", "video/quicktime"
@@ -87,34 +88,33 @@ public class FileStorageService {
             Files.createDirectories(uploadPath);
         }
 
-        log.info("Attempting to store file: {} for user: {}", originalFilename, userEmail);
+        System.out.println("Attempting to store file: " + originalFilename + " for user: " + userEmail);
 
         try {
             Path targetLocation = uploadPath.resolve(storedFileName);
             Files.copy(file.getInputStream(), targetLocation, StandardCopyOption.REPLACE_EXISTING);
 
-            UploadedFile uploadedFile = UploadedFile.builder()
-                    .originalFileName(originalFilename)
-                    .storedFileName(storedFileName)
-                    .fileType(contentType)
-                    .fileSize(file.getSize())
-                    .filePath(targetLocation.toAbsolutePath().toString())
-                    .uploadedBy(user)
-                    .build();
+            UploadedFile uploadedFile = new UploadedFile();
+            uploadedFile.setOriginalFileName(originalFilename);
+            uploadedFile.setStoredFileName(storedFileName);
+            uploadedFile.setFileType(contentType);
+            uploadedFile.setFileSize(file.getSize());
+            uploadedFile.setFilePath(targetLocation.toAbsolutePath().toString());
+            uploadedFile.setUploadedBy(user);
 
             UploadedFile savedFile = fileRepository.save(uploadedFile);
-            log.info("File successfully ingested and indexed: {}", savedFile.getOriginalFileName());
+            System.out.println("File successfully ingested and indexed: " + savedFile.getOriginalFileName());
 
-            return UploadResponse.builder()
-                    .id(savedFile.getId())
-                    .originalFileName(savedFile.getOriginalFileName())
-                    .fileType(savedFile.getFileType())
-                    .fileSize(savedFile.getFileSize())
-                    .uploadTime(savedFile.getUploadTime())
-                    .status("UPLOADED")
-                    .build();
+            UploadResponse response = new UploadResponse();
+            response.setId(savedFile.getId());
+            response.setOriginalFileName(savedFile.getOriginalFileName());
+            response.setFileType(savedFile.getFileType());
+            response.setFileSize(savedFile.getFileSize());
+            response.setUploadTime(savedFile.getUploadTime());
+            response.setStatus("UPLOADED");
+            return response;
         } catch (Exception e) {
-            log.error("INGESTION CRITICAL FAILURE for file {}: {}", originalFilename, e.getMessage());
+            System.out.println("INGESTION CRITICAL FAILURE for file " + originalFilename + ": " + e.getMessage());
             throw new RuntimeException("Neural Ingestion Matrix Error: " + e.getMessage());
         }
     }
@@ -137,14 +137,16 @@ public class FileStorageService {
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
         return fileRepository.findByUploadedById(user.getId()).stream()
-                .map(file -> UploadResponse.builder()
-                        .id(file.getId())
-                        .originalFileName(file.getOriginalFileName())
-                        .fileType(file.getFileType())
-                        .fileSize(file.getFileSize())
-                        .uploadTime(file.getUploadTime())
-                        .status("UPLOADED")
-                        .build())
+                .map(f -> {
+                    UploadResponse res = new UploadResponse();
+                    res.setId(f.getId());
+                    res.setOriginalFileName(f.getOriginalFileName());
+                    res.setFileType(f.getFileType());
+                    res.setFileSize(f.getFileSize());
+                    res.setUploadTime(f.getUploadTime());
+                    res.setStatus("UPLOADED");
+                    return res;
+                })
                 .collect(java.util.stream.Collectors.toList());
     }
 
@@ -155,14 +157,14 @@ public class FileStorageService {
         try {
             Path filePath = Paths.get(uploadedFile.getFilePath());
             Files.deleteIfExists(filePath);
-            log.info("Physical file deleted: {}", uploadedFile.getOriginalFileName());
+            System.out.println("Physical file deleted: " + uploadedFile.getOriginalFileName());
         } catch (IOException e) {
-            log.error("Failed to delete physical file: {}", e.getMessage());
+            System.out.println("ERROR: Failed to delete physical file: " + e.getMessage());
             // Continue to delete from DB even if disk deletion fails
         }
 
         // Delete from database
         fileRepository.delete(uploadedFile);
-        log.info("File record deleted from database: {}", id);
+        System.out.println("File record deleted from database: " + id);
     }
 }

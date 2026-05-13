@@ -1,5 +1,5 @@
 server:
-  port: 8080
+  port: ${PORT:8080}
 
   servlet:
     context-path: /
@@ -15,7 +15,7 @@ spring:
     name: ai-knowledge-assistant
 
   datasource:
-    url: jdbc:mysql://${MYSQL_HOST:mysql}:${MYSQL_PORT:3306}/${MYSQL_DATABASE:knowledge_assistant}?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+    url: jdbc:mysql://localhost:3308/knowledge_assistant?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
     username: ${MYSQL_USER:root}
     password: ${MYSQL_PASSWORD:root}
     driver-class-name: com.mysql.cj.jdbc.Driver
@@ -28,8 +28,9 @@ spring:
 
   data:
     redis:
-      host: ${REDIS_HOST:localhost}
-      port: ${REDIS_PORT:6379}
+      host: localhost
+      port: 6380
+      # url: ${REDIS_URL:}
 
   servlet:
     multipart:
@@ -49,7 +50,7 @@ openai:
   api-key: ${OPENAI_API_KEY:demo}
 
 pinecone:
-  api-key: ${PINECONE_API_KEY:pcsk_3mmfsu_Ht6xQWnme4bByDHTesYqAesukL1g7yeBz88ZTDmq6bAYn4ZcZ7YCcReNRsBW7kY}
-  environment: ${PINECONE_ENVIRONMENT:aped-4627-b74a}
-  project-id: ${PINECONE_PROJECT_ID:tpcv32f}
+  api-key: ${PINECONE_API_KEY:pcsk_6bbBGg_KMu9qoBaCFXAVqg61TeTB1zgaeYCF4zPDSgzHQuP2U8b4yHZyfCB2cFJKFXzfs4}
   index: ${PINECONE_INDEX:knowledge-assistant}
+  environment: aped-4627-b74a
+  project-name: tpcv32f

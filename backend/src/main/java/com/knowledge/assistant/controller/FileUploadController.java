@@ -5,7 +5,6 @@ import com.knowledge.assistant.service.EmbeddingService;
 import com.knowledge.assistant.service.FileStorageService;
 import com.knowledge.assistant.service.PdfProcessingService;
 import com.knowledge.assistant.service.WhisperTranscriptionService;
-import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.transaction.annotation.Transactional;
@@ -17,7 +16,6 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/files")
-@RequiredArgsConstructor
 public class FileUploadController {
 
     private final FileStorageService fileStorageService;
@@ -26,6 +24,22 @@ public class FileUploadController {
     private final EmbeddingService embeddingService;
     private final com.knowledge.assistant.repository.ChatHistoryRepository chatHistoryRepository;
     private final com.knowledge.assistant.repository.TimestampReferenceRepository timestampReferenceRepository;
+
+    public FileUploadController(
+            FileStorageService fileStorageService,
+            PdfProcessingService pdfProcessingService,
+            WhisperTranscriptionService whisperTranscriptionService,
+            EmbeddingService embeddingService,
+            com.knowledge.assistant.repository.ChatHistoryRepository chatHistoryRepository,
+            com.knowledge.assistant.repository.TimestampReferenceRepository timestampReferenceRepository
+    ) {
+        this.fileStorageService = fileStorageService;
+        this.pdfProcessingService = pdfProcessingService;
+        this.whisperTranscriptionService = whisperTranscriptionService;
+        this.embeddingService = embeddingService;
+        this.chatHistoryRepository = chatHistoryRepository;
+        this.timestampReferenceRepository = timestampReferenceRepository;
+    }
 
     @PostMapping("/upload")
     public ResponseEntity<UploadResponse> uploadFile(

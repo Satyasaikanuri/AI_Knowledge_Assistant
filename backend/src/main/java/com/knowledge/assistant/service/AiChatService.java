@@ -12,7 +12,6 @@ import com.knowledge.assistant.repository.UploadedFileRepository;
 import com.knowledge.assistant.repository.UserRepository;
 import dev.langchain4j.model.chat.ChatLanguageModel;
 import dev.langchain4j.model.openai.OpenAiChatModel;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -20,7 +19,6 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
-@Slf4j
 public class AiChatService {
 
     private final VectorSearchService vectorSearchService;
@@ -59,7 +57,7 @@ public class AiChatService {
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
         String question = request.getQuestion().replaceAll("^\"|\"$", "");
-        log.info("Processing question: '{}' for fileId: {} and user: {}", question, request.getFileId(), userEmail);
+        System.out.println("Processing question: '" + question + "' for fileId: " + request.getFileId() + " and user: " + userEmail);
 
         UploadedFile file = fileRepository.findById(request.getFileId())
                 .orElseThrow(() -> new RuntimeException("File not found with ID: " + request.getFileId()));
@@ -68,14 +66,16 @@ public class AiChatService {
         List<String> contextList = vectorSearchService.searchRelevantContext(question, request.getFileId(), 8);
         String context = String.join("\n\n---\n\n", contextList);
 
-        // 2. Format Prompt (Improved for better summarization)
+        // 2. Format Prompt (Improved for better summarization and timestamp citation)
         String prompt = String.format(
-                "You are an expert Document Assistant. Your task is to provide accurate information based ONLY on the provided context.\n\n" +
+                "You are an expert Neural Knowledge Terminal. Your task is to provide accurate information based ONLY on the provided context.\n\n" +
+                "CONTEXT FORMAT: [start_time - end_time]: Text content\n\n" +
                 "GUIDELINES:\n" +
                 "1. If the information is in the context, provide a detailed and helpful answer.\n" +
                 "2. If the user asks for a summary, synthesize the relevant parts of the context.\n" +
-                "3. If the answer is absolutely not in the context, say: \"Information not found in uploaded document.\"\n" +
-                "4. Always cite your sources using the [Source: Chunk X] markers provided.\n\n" +
+                "3. IMPORTANT: When discussing content from audio/video files, ALWAYS cite the timestamp where the information occurs using the exact [start - end] format found in the context (e.g., \"The speaker mentions X at [12.50 - 15.20]\").\n" +
+                "4. If the answer is not in the context, say: \"Information not found in uploaded neural units.\"\n" +
+                "5. Always cite your chunk sources using the [Source: Chunk X] markers.\n\n" +
                 "DOCUMENT NAME: %s\n\n" +
                 "DOCUMENT CONTEXT:\n%s\n\n" +
                 "USER QUESTION:\n%s", 
@@ -86,12 +86,11 @@ public class AiChatService {
         String answer = chatLanguageModel.generate(prompt);
 
         // 4. Save Chat History
-        ChatHistory history = ChatHistory.builder()
-                .question(request.getQuestion())
-                .answer(answer)
-                .uploadedFile(file)
-                .user(user)
-                .build();
+        ChatHistory history = new ChatHistory();
+        history.setQuestion(request.getQuestion());
+        history.setAnswer(answer);
+        history.setUploadedFile(file);
+        history.setUser(user);
         chatHistoryRepository.save(history);
 
         // 5. Find matching timestamps if it's an audio/video file
@@ -104,10 +103,10 @@ public class AiChatService {
                     .collect(Collectors.toList());
         }
 
-        return ChatResponse.builder()
-                .answer(answer)
-                .sources(contextList)
-                .timestamps(timestamps)
-                .build();
+        ChatResponse chatResponse = new ChatResponse();
+        chatResponse.setAnswer(answer);
+        chatResponse.setSources(contextList);
+        chatResponse.setTimestamps(timestamps);
+        return chatResponse;
     }
 }

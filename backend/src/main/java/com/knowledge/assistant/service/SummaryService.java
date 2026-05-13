@@ -4,13 +4,11 @@ import com.knowledge.assistant.entity.UploadedFile;
 import com.knowledge.assistant.repository.UploadedFileRepository;
 import dev.langchain4j.model.chat.ChatLanguageModel;
 import dev.langchain4j.model.openai.OpenAiChatModel;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 @Service
-@Slf4j
 public class SummaryService {
 
     private final UploadedFileRepository fileRepository;
@@ -30,7 +28,7 @@ public class SummaryService {
 
     @Cacheable(value = "summaries", key = "#fileId")
     public String generateSummary(Long fileId) {
-        log.info("Generating summary for file ID: {}", fileId);
+        System.out.println("Generating summary for file ID: " + fileId);
         
         UploadedFile file = fileRepository.findById(fileId)
                 .orElseThrow(() -> new RuntimeException("File not found"));

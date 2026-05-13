@@ -2,39 +2,55 @@ package com.knowledge.assistant.config;
 
 import io.github.bucket4j.Bandwidth;
 import io.github.bucket4j.Bucket;
-import io.github.bucket4j.BucketConfiguration;
 import io.github.bucket4j.Refill;
-import io.github.bucket4j.distributed.proxy.ProxyManager;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 
 import java.time.Duration;
-import java.util.function.Supplier;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
-@Component
-@RequiredArgsConstructor
+@Service
 public class RateLimitingService {
 
-    private final ProxyManager<String> proxyManager;
+    // Simple in-memory storage for buckets
+    private final Map<String, Bucket> generalBuckets = new ConcurrentHashMap<>();
+    private final Map<String, Bucket> uploadBuckets = new ConcurrentHashMap<>();
+    private final Map<String, Bucket> chatBuckets = new ConcurrentHashMap<>();
 
-    // 100 requests per minute per IP
+    public RateLimitingService() {
+        // Manual constructor as requested (No Lombok)
+    }
+
+    /**
+     * Resolve bucket for general API requests: 100 requests per minute
+     */
     public Bucket resolveGeneralBucket(String ip) {
-        return proxyManager.builder().build("general_" + ip, () -> getConfiguration(100, Duration.ofMinutes(1)));
+        return generalBuckets.computeIfAbsent(ip, key -> 
+            Bucket.builder()
+                .addLimit(Bandwidth.classic(100, Refill.greedy(100, Duration.ofMinutes(1))))
+                .build()
+        );
     }
 
-    // 20 upload requests per hour per IP
+    /**
+     * Resolve bucket for file uploads: 20 requests per hour
+     */
     public Bucket resolveUploadBucket(String ip) {
-        return proxyManager.builder().build("upload_" + ip, () -> getConfiguration(20, Duration.ofHours(1)));
+        return uploadBuckets.computeIfAbsent(ip, key -> 
+            Bucket.builder()
+                .addLimit(Bandwidth.classic(20, Refill.greedy(20, Duration.ofHours(1))))
+                .build()
+        );
     }
 
-    // 30 chat requests per minute per IP/User
+    /**
+     * Resolve bucket for chat API: 30 requests per minute
+     */
     public Bucket resolveChatBucket(String identifier) {
-        return proxyManager.builder().build("chat_" + identifier, () -> getConfiguration(30, Duration.ofMinutes(1)));
-    }
-
-    private BucketConfiguration getConfiguration(long capacity, Duration period) {
-        return BucketConfiguration.builder()
-                .addLimit(Bandwidth.classic(capacity, Refill.greedy(capacity, period)))
-                .build();
+        return chatBuckets.computeIfAbsent(identifier, key -> 
+            Bucket.builder()
+                .addLimit(Bandwidth.classic(30, Refill.greedy(30, Duration.ofMinutes(1))))
+                .build()
+        );
     }
 }

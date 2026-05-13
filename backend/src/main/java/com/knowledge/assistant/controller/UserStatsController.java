@@ -5,7 +5,6 @@ import com.knowledge.assistant.entity.User;
 import com.knowledge.assistant.repository.ChatHistoryRepository;
 import com.knowledge.assistant.repository.UploadedFileRepository;
 import com.knowledge.assistant.repository.UserRepository;
-import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -18,12 +17,21 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/v1/stats")
-@RequiredArgsConstructor
 public class UserStatsController {
 
     private final UserRepository userRepository;
     private final UploadedFileRepository fileRepository;
     private final ChatHistoryRepository chatRepository;
+
+    public UserStatsController(
+            UserRepository userRepository,
+            UploadedFileRepository fileRepository,
+            ChatHistoryRepository chatRepository
+    ) {
+        this.userRepository = userRepository;
+        this.fileRepository = fileRepository;
+        this.chatRepository = chatRepository;
+    }
 
     @GetMapping
     public ResponseEntity<Map<String, Object>> getUserStats(Authentication authentication) {

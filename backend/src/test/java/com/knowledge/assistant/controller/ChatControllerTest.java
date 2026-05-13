@@ -47,7 +47,7 @@ class ChatControllerTest {
     }
 
     @Test
-    @WithMockUser
+    @WithMockUser(username = "test@example.com")
     void askQuestion_Success() throws Exception {
         ChatRequest request = new ChatRequest();
         request.setQuestion("Test Question");
@@ -56,7 +56,7 @@ class ChatControllerTest {
         ChatResponse response = new ChatResponse();
         response.setAnswer("Test Answer");
 
-        when(aiChatService.askQuestion(anyString(), anyLong())).thenReturn(response);
+        when(aiChatService.askQuestion(any(ChatRequest.class), eq("test@example.com"))).thenReturn(response);
 
         mockMvc.perform(post("/api/v1/chat/ask")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -72,6 +72,7 @@ class ChatControllerTest {
 
         ChatRequest request = new ChatRequest();
         request.setQuestion("Test Question");
+        request.setFileId(1L);
 
         mockMvc.perform(post("/api/v1/chat/ask")
                 .contentType(MediaType.APPLICATION_JSON)

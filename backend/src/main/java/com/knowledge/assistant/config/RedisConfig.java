@@ -1,11 +1,5 @@
 package com.knowledge.assistant.config;
 
-import io.github.bucket4j.distributed.expiration.ExpirationAfterWriteStrategy;
-import io.github.bucket4j.distributed.proxy.ClientSideConfig;
-import io.github.bucket4j.distributed.proxy.ProxyManager;
-import io.github.bucket4j.redis.lettuce.cas.LettuceBasedProxyManager;
-import io.lettuce.core.RedisClient;
-import io.lettuce.core.RedisURI;
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -27,20 +21,6 @@ public class RedisConfig {
 
         return RedisCacheManager.builder(connectionFactory)
                 .cacheDefaults(config)
-                .build();
-    }
-
-    @Bean
-    public ProxyManager<String> proxyManager() {
-        // Simple URI for local/docker redis
-        RedisClient redisClient = RedisClient.create(RedisURI.create("redis://redis:6379"));
-        
-        ClientSideConfig clientSideConfig = ClientSideConfig.withExpirationAfterWriteStrategy(
-                ExpirationAfterWriteStrategy.fixedTtl(Duration.ofDays(1))
-        );
-
-        return LettuceBasedProxyManager.builderFor(redisClient)
-                .withClientSideConfig(clientSideConfig)
                 .build();
     }
 }
