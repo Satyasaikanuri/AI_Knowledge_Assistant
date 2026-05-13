@@ -30,7 +30,6 @@ spring:
     redis:
       host: localhost
       port: 6380
-      # url: ${REDIS_URL:}
 
   servlet:
     multipart:
@@ -38,19 +37,17 @@ spring:
       max-request-size: 500MB
 
 jwt:
-  secret: myVeryStrongSecretKeyForJwtAuthentication2026SecureKey123456
+  secret: ${JWT_SECRET}
   expiration: 86400000
 
 groq:
-  api-key: ${GROQ_API_KEY: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}
+  api-key: ${GROQ_API_KEY}
   base-url: https://api.groq.com/openai/v1
   model-name: llama-3.3-70b-versatile
 
 openai:
-  api-key: ${OPENAI_API_KEY:demo}
+  api-key: ${OPENAI_API_KEY}
 
 pinecone:
-  api-key: ${PINECONE_API_KEY:pcsk_6bbBGg_KMu9qoBaCFXAVqg61TeTB1zgaeYCF4zPDSgzHQuP2U8b4yHZyfCB2cFJKFXzfs4}
+  api-key: ${PINECONE_API_KEY}
   index: ${PINECONE_INDEX:knowledge-assistant}
-  environment: aped-4627-b74a
-  project-name: tpcv32f
