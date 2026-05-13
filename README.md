@@ -99,6 +99,3 @@ cd backend
 mvn test
 ```
 
-## 📄 License
-This project is for demonstration and SDE-1 Assignment evaluation.
-Designed by **Antigravity AI**.
