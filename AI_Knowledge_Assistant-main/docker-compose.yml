@@ -1,0 +1,67 @@
+version: '3.8'
+
+services:
+
+  backend:
+    build:
+      context: ./backend
+
+    ports:
+      - "8081:8080"
+
+    environment:
+      - MYSQL_HOST=mysql
+      - MYSQL_PORT=3306
+      - MYSQL_DATABASE=knowledge_assistant
+      - MYSQL_USER=root
+      - MYSQL_PASSWORD=root
+
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+
+      - JWT_SECRET=myUltraSecureJwtSecretKeyForAIKnowledgeAssistantApplication2026HS256SecureKey987654321
+
+      - GROQ_API_KEY=${GROQ_API_KEY}
+      - PINECONE_API_KEY=${PINECONE_API_KEY}
+      - PINECONE_INDEX=${PINECONE_INDEX}
+
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_started
+
+    volumes:
+      - uploaded_data:/app/uploads
+
+  mysql:
+    image: mysql:8.0
+
+    ports:
+      - "3308:3306"
+
+    environment:
+      - MYSQL_ROOT_PASSWORD=root
+      - MYSQL_DATABASE=knowledge_assistant
+
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 20s
+      retries: 10
+
+    volumes:
+      - mysql_data:/var/lib/mysql
+
+  redis:
+    image: redis:7-alpine
+
+    ports:
+      - "6380:6379"
+
+    volumes:
+      - redis_data:/data
+
+volumes:
+  mysql_data:
+  redis_data:
+  uploaded_data:

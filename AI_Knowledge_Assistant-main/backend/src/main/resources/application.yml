@@ -1,0 +1,56 @@
+server:
+  port: ${PORT:8080}
+
+  servlet:
+    context-path: /
+
+  compression:
+    enabled: true
+    mime-types: text/html,text/xml,text/plain,text/css,text/javascript,application/javascript,application/json
+    min-response-size: 1024
+
+spring:
+
+  main:
+    lazy-initialization: true
+
+  application:
+    name: ai-knowledge-assistant
+
+  datasource:
+    url: jdbc:mysql://${MYSQL_HOST:localhost}:${MYSQL_PORT:3308}/${MYSQL_DATABASE:knowledge_assistant}?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+    username: ${MYSQL_USER:root}
+    password: ${MYSQL_PASSWORD:root}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+
+    database-platform: org.hibernate.dialect.MySQLDialect
+
+  data:
+    redis:
+      host: localhost
+      port: 6380
+
+  servlet:
+    multipart:
+      max-file-size: 500MB
+      max-request-size: 500MB
+
+jwt:
+  secret: ${JWT_SECRET}
+  expiration: 86400000
+
+groq:
+  api-key: ${GROQ_API_KEY}
+  base-url: https://api.groq.com/openai/v1
+  model-name: llama-3.3-70b-versatile
+
+
+pinecone:
+  api-key: ${PINECONE_API_KEY}
+  index: ${PINECONE_INDEX:knowledge-assistant}
+  environment: ${PINECONE_ENV:gcp-starter}
+  project-id: ${PINECONE_PROJECT_ID:default}
