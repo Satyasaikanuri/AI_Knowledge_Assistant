@@ -14,11 +14,11 @@ export default defineConfig({
     port: 5173,
     proxy: {
       '/api': {
-        target: 'http://localhost:8080',
+        target: 'https://ai-knowledge-assistant-nmqw.onrender.com',
         changeOrigin: true,
       },
       '/ws': {
-        target: 'ws://localhost:8080',
+        target: 'wss://ai-knowledge-assistant-nmqw.onrender.com',
         ws: true,
       }
     }
