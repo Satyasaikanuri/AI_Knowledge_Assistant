@@ -232,7 +232,7 @@ const Chat = () => {
                 >
                   <video 
                     ref={mediaRef} controls className="w-full h-full object-contain"
-                    src={`http://localhost:8080/api/v1/files/stream/${selectedFile}?token=${token}`}
+                    src={`https://ai-knowledge-assistant-nmqw.onrender.com/api/v1/files/stream/${selectedFile}?token=${token}`}
                   />
                 </motion.div>
               )}
