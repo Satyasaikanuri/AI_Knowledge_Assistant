@@ -13,6 +13,11 @@ COPY --from=build /app/target/*.jar app.jar
 # Use PORT environment variable provided by Render
 EXPOSE 8080
 
-ENV JAVA_TOOL_OPTIONS="-Xms64m -Xmx128m -XX:+UseSerialGC -Xss512k -XX:MaxMetaspaceSize=90m -XX:MaxDirectMemorySize=64m -XX:ReservedCodeCacheSize=64m"
-
-ENTRYPOINT ["java", "-jar", "app.jar"]
+ENTRYPOINT ["java",
+"-XX:+UseSerialGC",
+"-Xms128m",
+"-Xmx256m",
+"-Xss256k",
+"-XX:MaxMetaspaceSize=96m",
+"-jar",
+"app.jar"]

@@ -82,9 +82,9 @@ public class SecurityConfig {
 
         CorsConfiguration configuration = new CorsConfiguration();
 
-        configuration.setAllowedOriginPatterns(List.of(
-                "http://localhost:3000",
-                "https://*.vercel.app"
+        configuration.setAllowedOrigins(List.of(
+            "http://localhost:3000",
+            "https://ai-knowledge-assistant-bzaf-qhom6v113-satyasaikanuris-projects.vercel.app"
         ));
 
         configuration.setAllowedMethods(List.of(
