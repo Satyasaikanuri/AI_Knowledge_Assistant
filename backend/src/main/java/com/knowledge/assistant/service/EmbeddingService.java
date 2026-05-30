@@ -29,7 +29,9 @@ public class EmbeddingService {
             EmbeddingMetadataRepository metadataRepository,
             UploadedFileRepository fileRepository,
             @Value("${pinecone.api-key}") String pineconeApiKey,
-            @Value("${pinecone.index}") String pineconeIndex
+            @Value("${pinecone.index}") String pineconeIndex,
+            @Value("${pinecone.environment:gcp-starter}") String pineconeEnv,
+            @Value("${pinecone.project-id:default}") String pineconeProjectId
     ) {
         this.metadataRepository = metadataRepository;
         this.fileRepository = fileRepository;
@@ -37,6 +39,8 @@ public class EmbeddingService {
         this.embeddingStore = PineconeEmbeddingStore.builder()
                 .apiKey(pineconeApiKey)
                 .index(pineconeIndex)
+                .environment(pineconeEnv)
+                .projectId(pineconeProjectId)
                 .build();
     }
 
