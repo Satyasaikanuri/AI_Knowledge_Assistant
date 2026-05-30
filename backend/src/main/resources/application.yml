@@ -49,3 +49,5 @@ groq:
 pinecone:
   api-key: ${PINECONE_API_KEY}
   index: ${PINECONE_INDEX:knowledge-assistant}
+  environment: ${PINECONE_ENV:gcp-starter}
+  project-id: ${PINECONE_PROJECT_ID:default}
