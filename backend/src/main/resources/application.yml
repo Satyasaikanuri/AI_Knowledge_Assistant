@@ -11,11 +11,15 @@ server:
 
 spring:
 
+  application:
+    name: ai-knowledge-assistant
+
   datasource:
-    url: ${SPRING_DATASOURCE_URL}
-    username: root
-    password: ${SPRING_DATASOURCE_PASSWORD}
+    url: jdbc:mysql://${MYSQL_HOST}:${MYSQL_PORT}/${MYSQL_DATABASE}?useSSL=true&requireSSL=true&sslMode=REQUIRED
+    username: ${MYSQL_USER:root}
+    password: ${MYSQL_PASSWORD:root}
     driver-class-name: com.mysql.cj.jdbc.Driver
+
   jpa:
     hibernate:
       ddl-auto: update
@@ -24,8 +28,8 @@ spring:
 
   data:
     redis:
-      host: ${REDIS_HOST:localhost}
-      port: ${REDIS_PORT:6379}
+      host: localhost
+      port: 6380
 
   servlet:
     multipart:
