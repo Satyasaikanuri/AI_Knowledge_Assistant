@@ -16,12 +16,15 @@ public class SummaryService {
 
     public SummaryService(
             UploadedFileRepository fileRepository,
-            @Value("${openai.api-key}") String openAiApiKey
+            @Value("${groq.api-key}") String groqApiKey,
+            @Value("${groq.base-url}") String groqBaseUrl,
+            @Value("${groq.model-name}") String groqModelName
     ) {
         this.fileRepository = fileRepository;
         this.chatLanguageModel = OpenAiChatModel.builder()
-                .apiKey(openAiApiKey)
-                .modelName("gpt-4o-mini")
+                .baseUrl(groqBaseUrl)
+                .apiKey(groqApiKey)
+                .modelName(groqModelName)
                 .temperature(0.3)
                 .build();
     }
