@@ -82,7 +82,10 @@ public class SecurityConfig {
 
         CorsConfiguration configuration = new CorsConfiguration();
 
-        configuration.setAllowedOriginPatterns(List.of("*"));
+        configuration.setAllowedOriginPatterns(List.of(
+                "http://localhost:3000",
+                "https://*.vercel.app"
+        ));
 
         configuration.setAllowedMethods(List.of(
                 "GET",
