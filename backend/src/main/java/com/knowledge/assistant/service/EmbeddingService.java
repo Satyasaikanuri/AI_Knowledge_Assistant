@@ -8,7 +8,7 @@ import dev.langchain4j.data.document.Document;
 import dev.langchain4j.data.document.splitter.DocumentSplitters;
 import dev.langchain4j.data.embedding.Embedding;
 import dev.langchain4j.data.segment.TextSegment;
-import dev.langchain4j.model.embedding.onnx.bgesmallenv15q.BgeSmallEnV15QuantizedEmbeddingModel;
+import dev.langchain4j.model.embedding.onnx.bgesmallenq.BgeSmallEnQuantizedEmbeddingModel;
 import dev.langchain4j.model.embedding.EmbeddingModel;
 import dev.langchain4j.store.embedding.EmbeddingStore;
 import dev.langchain4j.store.embedding.pinecone.PineconeEmbeddingStore;
@@ -91,8 +91,8 @@ public class EmbeddingService {
 
     public EmbeddingModel getEmbeddingModel() {
         if (this.embeddingModel == null) {
-            System.out.println("Lazily initializing BgeSmallEnV15QuantizedEmbeddingModel...");
-            this.embeddingModel = new BgeSmallEnV15QuantizedEmbeddingModel();
+            System.out.println("Lazily initializing BgeSmallEnQuantizedEmbeddingModel...");
+            this.embeddingModel = new BgeSmallEnQuantizedEmbeddingModel();
         }
         return this.embeddingModel;
     }
