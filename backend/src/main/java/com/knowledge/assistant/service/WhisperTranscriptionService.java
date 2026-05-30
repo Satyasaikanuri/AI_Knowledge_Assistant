@@ -26,8 +26,11 @@ import java.util.Iterator;
 @Service
 public class WhisperTranscriptionService {
 
-    @Value("${openai.api-key}")
-    private String openAiApiKey;
+    @Value("${groq.api-key}")
+    private String groqApiKey;
+
+    @Value("${groq.base-url}")
+    private String groqBaseUrl;
 
     private final UploadedFileRepository fileRepository;
     private final TimestampReferenceRepository timestampRepository;
@@ -59,18 +62,18 @@ public class WhisperTranscriptionService {
 
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.MULTIPART_FORM_DATA);
-            headers.setBearerAuth(openAiApiKey);
+            headers.setBearerAuth(groqApiKey);
 
             MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
             body.add("file", new FileSystemResource(file));
-            body.add("model", "whisper-1");
+            body.add("model", "whisper-large-v3");
             body.add("response_format", "verbose_json"); // We need verbose_json for timestamps
 
             HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(body, headers);
 
-            String url = "https://api.openai.com/v1/audio/transcriptions";
+            String url = groqBaseUrl + "/audio/transcriptions";
             
-            System.out.println("Sending request to OpenAI Whisper API...");
+            System.out.println("Sending request to Groq Whisper API...");
             ResponseEntity<String> response = restTemplate.postForEntity(url, requestEntity, String.class);
 
             if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
@@ -113,7 +116,7 @@ public class WhisperTranscriptionService {
 
                 System.out.println("Finished processing audio/video for file ID: " + fileId);
             } else {
-                System.out.println("ERROR: Whisper API call failed with status: " + response.getStatusCode());
+                System.out.println("ERROR: Groq Whisper API call failed with status: " + response.getStatusCode());
             }
 
         } catch (Exception e) {
