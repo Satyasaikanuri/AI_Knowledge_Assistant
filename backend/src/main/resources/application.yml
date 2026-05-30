@@ -15,7 +15,7 @@ spring:
     name: ai-knowledge-assistant
 
   datasource:
-    url: jdbc:mysql://${MYSQL_HOST}:${MYSQL_PORT}/${MYSQL_DATABASE}?useSSL=true&requireSSL=true&sslMode=REQUIRED
+    url: jdbc:mysql://${MYSQL_HOST:localhost}:${MYSQL_PORT:3308}/${MYSQL_DATABASE:knowledge_assistant}?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
     username: ${MYSQL_USER:root}
     password: ${MYSQL_PASSWORD:root}
     driver-class-name: com.mysql.cj.jdbc.Driver
@@ -45,8 +45,6 @@ groq:
   base-url: https://api.groq.com/openai/v1
   model-name: llama-3.3-70b-versatile
 
-openai:
-  api-key: ${OPENAI_API_KEY}
 
 pinecone:
   api-key: ${PINECONE_API_KEY}
