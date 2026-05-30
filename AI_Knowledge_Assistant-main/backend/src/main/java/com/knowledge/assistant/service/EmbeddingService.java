@@ -8,8 +8,8 @@ import dev.langchain4j.data.document.Document;
 import dev.langchain4j.data.document.splitter.DocumentSplitters;
 import dev.langchain4j.data.embedding.Embedding;
 import dev.langchain4j.data.segment.TextSegment;
-import dev.langchain4j.model.embedding.BgeSmallEnQuantizedEmbeddingModel;
 import dev.langchain4j.model.embedding.EmbeddingModel;
+import dev.langchain4j.model.openai.OpenAiEmbeddingModel;
 import dev.langchain4j.store.embedding.EmbeddingStore;
 import dev.langchain4j.store.embedding.pinecone.PineconeEmbeddingStore;
 import org.springframework.beans.factory.annotation.Value;
@@ -22,7 +22,7 @@ public class EmbeddingService {
 
     private final EmbeddingMetadataRepository metadataRepository;
     private final UploadedFileRepository fileRepository;
-    private EmbeddingModel embeddingModel;
+    private final EmbeddingModel embeddingModel;
     private final EmbeddingStore<TextSegment> embeddingStore;
 
     public EmbeddingService(
@@ -31,7 +31,8 @@ public class EmbeddingService {
             @Value("${pinecone.api-key}") String pineconeApiKey,
             @Value("${pinecone.index}") String pineconeIndex,
             @Value("${pinecone.environment:gcp-starter}") String pineconeEnv,
-            @Value("${pinecone.project-id:default}") String pineconeProjectId
+            @Value("${pinecone.project-id:default}") String pineconeProjectId,
+            @Value("${openai.api-key}") String openAiApiKey
     ) {
         this.metadataRepository = metadataRepository;
         this.fileRepository = fileRepository;
@@ -41,6 +42,11 @@ public class EmbeddingService {
                 .index(pineconeIndex)
                 .environment(pineconeEnv)
                 .projectId(pineconeProjectId)
+                .build();
+                
+        this.embeddingModel = OpenAiEmbeddingModel.builder()
+                .apiKey(openAiApiKey)
+                .modelName("text-embedding-3-small")
                 .build();
     }
 
@@ -90,10 +96,6 @@ public class EmbeddingService {
     }
 
     public EmbeddingModel getEmbeddingModel() {
-        if (this.embeddingModel == null) {
-            System.out.println("Lazily initializing BgeSmallEnQuantizedEmbeddingModel...");
-            this.embeddingModel = new BgeSmallEnQuantizedEmbeddingModel();
-        }
         return this.embeddingModel;
     }
 

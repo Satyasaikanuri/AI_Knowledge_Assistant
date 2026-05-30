@@ -62,8 +62,8 @@ public class AiChatService {
         UploadedFile file = fileRepository.findById(request.getFileId())
                 .orElseThrow(() -> new RuntimeException("File not found with ID: " + request.getFileId()));
 
-        // 1. Get relevant context from Vector DB (Increase context to 8 chunks)
-        List<String> contextList = vectorSearchService.searchRelevantContext(question, request.getFileId(), 8);
+        // 1. Get relevant context from Vector DB (Increase context to 3 chunks to save memory)
+        List<String> contextList = vectorSearchService.searchRelevantContext(question, request.getFileId(), 3);
         String context = String.join("\n\n---\n\n", contextList);
 
         // 2. Format Prompt (Improved for better summarization and timestamp citation)

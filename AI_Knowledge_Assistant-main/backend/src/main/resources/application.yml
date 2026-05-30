@@ -26,8 +26,11 @@ spring:
   jpa:
     hibernate:
       ddl-auto: update
-
     database-platform: org.hibernate.dialect.MySQLDialect
+    properties:
+      hibernate:
+        generate_statistics: false
+        session_events: log
 
   data:
     redis:
@@ -47,6 +50,9 @@ groq:
   api-key: ${GROQ_API_KEY}
   base-url: https://api.groq.com/openai/v1
   model-name: llama-3.3-70b-versatile
+
+openai:
+  api-key: ${OPENAI_API_KEY}
 
 
 pinecone:
